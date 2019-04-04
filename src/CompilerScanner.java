@@ -57,8 +57,10 @@ public class CompilerScanner {
             return new Token(Token.TokenType.ERROR, tokenText.toString());
         }
         tokenText.deleteCharAt(tokenText.length() - 1);
-        // TODO: handle keywords (Golezardi)
-        return new Token(Token.TokenType.valueOf(states.get(previousState).toString()), tokenText.toString());
+        Token.TokenType tokenType = Token.TokenType.valueOf(states.get(previousState).toString());
+        if (keywords.contains(tokenText))
+            tokenType = Token.TokenType.KEYWORD;
+        return new Token(tokenType, tokenText.toString());
     }
 
     public static void main(String[] args) throws IOException {
