@@ -6,29 +6,34 @@ public class CompilerScanner {
 
     private static Map<Integer, List<DfaEdge>> dfa;
     private static Map<Integer, StateType> states;
+    private static Set<String> keywords;
     private static int lineNumber = 0;
 
     private static void initialize() throws FileNotFoundException {
         dfa = new HashMap<>();
 
-        File file = new File("dfa.txt");
-        Scanner scanner = new Scanner(file);
-        while (scanner.hasNext()) {
-            int state = scanner.nextInt();
-            // TODO: input state types (Golezardi)
+        Scanner dfaScanner = new Scanner(new File("dfa.txt"));
+        while (dfaScanner.hasNext()) {
+            int state = dfaScanner.nextInt();
+            String type = dfaScanner.next();
+            states.put(state, StateType.valueOf(type));
 
             List<DfaEdge> edges = new ArrayList<>();
-            int edgeCount = scanner.nextInt();
+            int edgeCount = dfaScanner.nextInt();
             for (int i = 0; i < edgeCount; i++) {
-                String pattern = scanner.next();
-                int nextState = scanner.nextInt();
+                String pattern = dfaScanner.next();
+                int nextState = dfaScanner.nextInt();
                 edges.add(new DfaEdge(pattern, nextState));
             }
 
             dfa.put(state, edges);
         }
 
-        // TODO: input keywords (Golezardi)
+        keywords = new HashSet<>();
+        Scanner keywordScanner = new Scanner(new File("keywords.txt"));
+        while (keywordScanner.hasNext()) {
+            keywords.add(keywordScanner.next());
+        }
     }
 
     private static int get_next_state(int state, char c) {
