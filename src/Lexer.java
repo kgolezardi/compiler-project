@@ -93,7 +93,6 @@ public class Lexer {
         int pointer = 0, lastTokenLine = 0, lastErrorLine = 0;
         while (pointer < text.length()) {
             Token token = getNextToken(text, pointer);
-            System.out.println("'" + token.text + "'");
             pointer += token.text.length();
             for (char c : token.text.toCharArray())
                 if (c == '\n')
