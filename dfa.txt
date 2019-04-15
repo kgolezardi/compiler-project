@@ -8,5 +8,5 @@
 7 REJECT 2 [^\*] 7 [\*] 8
 8 REJECT 3 [\*] 8 [^\*\/] 7 [\/] 9
 9 COMMENT 1 .? -1
-10 WHITESPACE 1 [A-Za-z0-9\;\:\,\[\]\(\)\{\}\+\-\*\=\<\/\n\r\t\v\f\x20] -1
+10 WHITESPACE 1 . -1
 -1 FINISH 0
