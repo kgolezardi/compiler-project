@@ -1,0 +1,57 @@
+PROGRAM
+DECLARATION int void $ continue break ; { if while return switch id ( num + - }
+DECLARATION1 int void $ continue break ; { if while return switch id ( num + - }
+VAR_DECLARATION_CONT int void $ continue break ; { if while return switch id ( num + - }
+FUN_DECLARATION_CONT int void $ continue break ; { if while return switch id ( num + - }
+PARAMS )
+PARAMS_INT )
+PARAMS_VOID )
+PARAMS_VOID1 )
+PARAM_LIST_CONT )
+PARAM_LIST1 )
+PARAM_LIST )
+PARAM , )
+TYPE_SPECIFIER id
+PARAM_CONT , )
+PARAM1 , )
+DECLARATION_LIST $ continue break ; { if while return switch id ( num + - }
+COMPOUND_STMT case default else int void $ continue break ; { if while return switch id ( num + - }
+EXPRESSION_STMT case default continue break ; { if while return switch id ( num + - else }
+SELECTION_STMT case default continue break ; { if while return switch id ( num + - else }
+ITERATION_STMT case default continue break ; { if while return switch id ( num + - else }
+STATEMENT case default continue break ; { if while return switch id ( num + - else }
+RETURN_STMT case default continue break ; { if while return switch id ( num + - else }
+RETURN_STMT1 case default continue break ; { if while return switch id ( num + - else }
+SWITCH_STMT case default continue break ; { if while return switch id ( num + - else }
+CASE_STMTS default }
+CASE_STMT case default }
+DEFAULT_STMT }
+STATEMENT_LIST case default }
+EXPRESSION1 ; ] ) ,
+EXPRESSION2 ; ] ) ,
+SIMPLE_EXPRESSION_ID_CONT_NO_VAR1 ; ] ) ,
+SIMPLE_EXPRESSION_ID_CONT_VAR1_CONT ; ] ) ,
+SIMPLE_EXPRESSION_NO_ID ; ] ) ,
+SIMPLE_EXPRESSION1 ; ] ) ,
+RELOP ( id num + -
+ADDITIVE_EXPRESSION ; ] ) ,
+ADDITIVE_EXPRESSION_ID_CONT_NO_VAR1 < == ; ] ) ,
+ADDITIVE_EXPRESSION_ID_CONT_VAR1_CONT < == ; ] ) ,
+ADDITIVE_EXPRESSION_NO_ID < == ; ] ) ,
+ADDITIVE_EXPRESSION1 < == ; ] ) ,
+TERM + - < == ; ] ) ,
+TERM_NO_ID + - < == ; ] ) ,
+TERM_ID_CONT_NO_VAR1 + - < == ; ] ) ,
+TERM_ID_CONT_VAR1_CONT + - < == ; ] ) ,
+TERM1 + - < == ; ] ) ,
+SIGNED_FACTOR * + - < == ; ] ) ,
+SIGNED_FACTOR_NO_ID * + - < == ; ] ) ,
+ADDOP + - ( id num
+FACTOR_NO_ID * + - < == ; ] ) ,
+VAR1 = < == * + - ; ] ) ,
+FACTOR * + - < == ; ] ) ,
+FACTOR_ID_CONT * + - < == ; ] ) ,
+ARGS )
+EXPRESSION ; ] ) ,
+ARG_LIST1 )
+ARG_LIST )

@@ -1,3 +1,5 @@
+package Lexer;
+
 public class Token {
     public enum TokenType {NUM, ID, KEYWORD, SYMBOL, COMMENT, WHITESPACE, EOF, ERROR}
 

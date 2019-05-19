@@ -1,3 +1,5 @@
+package Lexer;
+
 public class DfaEdge {
     public String pattern;
     public Integer state;

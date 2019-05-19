@@ -1,0 +1,57 @@
+PROGRAM $ int void 
+DECLARATION int void 
+DECLARATION1 ; [ ( 
+VAR_DECLARATION_CONT ; [ 
+FUN_DECLARATION_CONT ( 
+PARAMS int void 
+PARAMS_INT int 
+PARAMS_VOID void 
+PARAMS_VOID1 id .
+PARAM_LIST_CONT id 
+PARAM_LIST1 , .
+PARAM_LIST int void 
+PARAM int void 
+TYPE_SPECIFIER int void 
+PARAM_CONT id 
+PARAM1 [ .
+DECLARATION_LIST int void .
+COMPOUND_STMT { 
+EXPRESSION_STMT continue break ; id ( num + - 
+SELECTION_STMT if 
+ITERATION_STMT while 
+STATEMENT continue break ; { if while return switch id ( num + - 
+RETURN_STMT return 
+RETURN_STMT1 ; id ( num + - 
+SWITCH_STMT switch 
+CASE_STMTS case .
+CASE_STMT case 
+DEFAULT_STMT default .
+STATEMENT_LIST continue break ; { if while return switch id ( num + - .
+EXPRESSION1 [ = ( < == * + - .
+EXPRESSION2 = < == * + - .
+SIMPLE_EXPRESSION_ID_CONT_NO_VAR1 ( 
+SIMPLE_EXPRESSION_ID_CONT_VAR1_CONT < == * + - .
+SIMPLE_EXPRESSION_NO_ID ( num + - 
+SIMPLE_EXPRESSION1 < == .
+RELOP < == 
+ADDITIVE_EXPRESSION ( id num + - 
+ADDITIVE_EXPRESSION_ID_CONT_NO_VAR1 ( 
+ADDITIVE_EXPRESSION_ID_CONT_VAR1_CONT * + - .
+ADDITIVE_EXPRESSION_NO_ID ( num + - 
+ADDITIVE_EXPRESSION1 + - .
+TERM ( id num + - 
+TERM_NO_ID ( num + - 
+TERM_ID_CONT_NO_VAR1 ( 
+TERM_ID_CONT_VAR1_CONT * .
+TERM1 * .
+SIGNED_FACTOR ( id num + - 
+SIGNED_FACTOR_NO_ID ( num + - 
+ADDOP + - 
+FACTOR_NO_ID ( num 
+VAR1 [ .
+FACTOR ( id num 
+FACTOR_ID_CONT ( [ .
+ARGS id ( num + - .
+EXPRESSION id ( num + - 
+ARG_LIST1 , .
+ARG_LIST id ( num + - 
