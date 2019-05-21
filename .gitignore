@@ -2,6 +2,7 @@
 code.txt
 lexical_errors.txt
 scanner.txt
+parse-tree.txt
 
 # Created by https://www.gitignore.io/api/intellij+all
 # Edit at https://www.gitignore.io/?templates=intellij+all

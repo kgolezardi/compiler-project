@@ -3,9 +3,11 @@ package Parser;
 import java.util.Scanner;
 
 public class Diagram {
-    DiagramNode start, finish;
+    public final String nonTerminal;
+    final DiagramNode start, finish;
 
-    public Diagram() {
+    public Diagram(String nonTerminal) {
+        this.nonTerminal = nonTerminal;
         start = new DiagramNode(false);
         finish = new DiagramNode(true);
     }

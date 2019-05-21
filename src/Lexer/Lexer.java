@@ -66,11 +66,10 @@ public class Lexer {
         throw new IllegalArgumentException();
     }
 
-    public boolean hasNextToken() {
-        return current != 0;
-    }
-
     public Token getNextToken() throws IOException {
+        if (current == 0)
+            return new Token(Token.TokenType.EOF, "EOF");
+
         int state = 0, previousState = -1;
         StringBuilder tokenText = new StringBuilder();
         try {

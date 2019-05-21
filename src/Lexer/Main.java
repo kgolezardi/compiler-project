@@ -11,8 +11,9 @@ public class Main {
         FileWriter tokensFile = new FileWriter("scanner.txt");
         FileWriter lexicalErrorsFile = new FileWriter("lexical_errors.txt");
 
-        while (lexer.hasNextToken()) {
-            Token token = lexer.getNextToken();
+        Token token;
+        do {
+            token = lexer.getNextToken();
 
             for (char c : token.text.toCharArray())
                 if (c == '\n')
@@ -26,7 +27,7 @@ public class Main {
                 lastTokenLine = getLastLine(lineNumber, lastTokenLine, tokensFile);
                 tokensFile.write("(" + token.type + ", " + token.text + ") ");
             }
-        }
+        } while (token.type != Token.TokenType.EOF);
 
         tokensFile.close();
         lexicalErrorsFile.close();
