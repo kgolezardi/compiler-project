@@ -12,6 +12,7 @@ public class Lexer {
     private static Set<String> keywords;
     private FileInputStream fis;
     private char current;
+    private int lineNumber = 1;
 
     static {
         try {
@@ -66,6 +67,10 @@ public class Lexer {
         throw new IllegalArgumentException();
     }
 
+    public int getLineNumber() {
+        return lineNumber;
+    }
+
     public Token getNextToken() throws IOException {
         if (current == 0)
             return new Token(Token.TokenType.EOF, "EOF");
@@ -77,6 +82,8 @@ public class Lexer {
                 if (state != 0) {
                     previousState = state;
                     tokenText.append(current);
+                    if (current == '\n')
+                        lineNumber++;
 
                     if (fis.available() <= 0) {
                         current = 0;
@@ -89,6 +96,8 @@ public class Lexer {
         } catch (IllegalArgumentException e) {
             if (previousState == -1 || states.get(previousState) != StateType.REJECT) {
                 tokenText.append(current);
+                if (current == '\n')
+                    lineNumber++;
                 current = (char) fis.read();
             }
             return new Token(Token.TokenType.ERROR, tokenText.toString());

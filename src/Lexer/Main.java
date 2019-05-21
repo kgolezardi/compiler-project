@@ -5,26 +5,22 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        Lexer lexer = new Lexer("code.txt");
-        int lastTokenLine = 0, lastErrorLine = 0, lineNumber = 1;
+        Lexer lexer = new Lexer("runtime/code.txt");
+        int lastTokenLine = 0, lastErrorLine = 0;
 
-        FileWriter tokensFile = new FileWriter("scanner.txt");
-        FileWriter lexicalErrorsFile = new FileWriter("lexical_errors.txt");
+        FileWriter tokensFile = new FileWriter("runtime/scanner.txt");
+        FileWriter lexicalErrorsFile = new FileWriter("runtime/lexical_errors.txt");
 
         Token token;
         do {
             token = lexer.getNextToken();
 
-            for (char c : token.text.toCharArray())
-                if (c == '\n')
-                    lineNumber++;
-
             if (token.type == Token.TokenType.ERROR) {
-                lastErrorLine = getLastLine(lineNumber, lastErrorLine, lexicalErrorsFile);
+                lastErrorLine = getLastLine(lexer.getLineNumber(), lastErrorLine, lexicalErrorsFile);
                 lexicalErrorsFile.write("(" + token.text + ", " + "invalid input) ");
             }
             else if (token.type != Token.TokenType.WHITESPACE && token.type != Token.TokenType.COMMENT) {
-                lastTokenLine = getLastLine(lineNumber, lastTokenLine, tokensFile);
+                lastTokenLine = getLastLine(lexer.getLineNumber(), lastTokenLine, tokensFile);
                 tokensFile.write("(" + token.type + ", " + token.text + ") ");
             }
         } while (token.type != Token.TokenType.EOF);
