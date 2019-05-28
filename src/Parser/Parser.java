@@ -123,7 +123,7 @@ public class Parser {
             errors.add(String.format("%d: Syntax Error! Missing '%s'", lexer.getLineNumber(), edge.label));
             return matchTerminalEdge(parseTreeNode, edge);
         } else {
-            do {
+            while (!exists(rawToken(), first.get(edge.label)) && !exists(rawToken(), follow.get(edge.label))) {
                 errors.add(String.format("%d: Syntax Error! Unexpected '%s' instead of '%s'", lexer.getLineNumber(),
                         currentToken.text, edge.label));
                 updateCurrentToken();
@@ -132,7 +132,7 @@ public class Parser {
                     setFinish();
                     return null;
                 }
-            } while (!exists(rawToken(), first.get(edge.label)) && !exists(rawToken(), follow.get(edge.label)));
+            }
             if (exists(rawToken(), first.get(edge.label)) ||
                     exists("", first.get(edge.label)) && exists(rawToken(), follow.get(edge.label)))
                 return matchNonTerminalEdge(parseTreeNode, edge);
@@ -155,8 +155,8 @@ public class Parser {
         Diagram diagram = diagrams.get(nonTerminal);
         DiagramNode node = diagram.start;
         while (node != diagram.finish) {
-            DiagramEdge edge = node.edges.get(0);
-            if (edge.isTerminal())
+            DiagramEdge edge = node.edges.get(node.edges.size() - 1);
+            if (edge.isTerminal() || edge.label.equals(""))
                 description.append(edge.label);
             else
                 description.append(nonTerminalDescription(edge.label));

@@ -20,11 +20,9 @@ public class Main {
 
     private static void printTree(FileWriter file, ParseTreeNode node, int depth) throws IOException {
         for (int i = 0; i < depth; i++)
-            file.write(String.format("%-10s", "|"));
+            file.write(String.format("%-3s", "|"));
         String label = node.label;
-        if (label.length() > 10)
-            label = label.substring(0, 5) + label.substring(label.length() - 5);
-        file.write(String.format("%-10s\n", label));
+        file.write(String.format("%-3s\n", label));
         for (ParseTreeNode child : node.children) {
             printTree(file, child, depth + 1);
         }
