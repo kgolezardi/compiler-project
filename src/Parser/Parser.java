@@ -128,36 +128,34 @@ public class Parser {
         return description.toString();
     }
 
-    private DiagramNode matchTerminalEdge(ParseTreeNode parseTreeNode, DiagramEdge edge) throws IOException {
+    private DiagramNode matchTerminalEdge(DiagramEdge edge) throws IOException {
         updateCurrentToken();
-        ParseTreeNode child = new ParseTreeNode(edge.label);
-        parseTreeNode.children.add(child);
         return edge.nextNode;
     }
 
-    private DiagramNode matchNonTerminalEdge(ParseTreeNode parseTreeNode, DiagramEdge edge) throws IOException {
-        traverse(diagrams.get(edge.label), parseTreeNode);
+    private DiagramNode matchNonTerminalEdge(DiagramEdge edge) throws IOException {
+        traverse(diagrams.get(edge.label));
         return edge.nextNode;
     }
 
-    private DiagramNode getNextNode(Diagram diagram, DiagramNode node, ParseTreeNode parseTreeNode) throws IOException {
+    private DiagramNode getNextNode(Diagram diagram, DiagramNode node) throws IOException {
         for (DiagramEdge edge : node.edges) {
             if (edge.isTerminal() && edge.label.equals(rawToken()))
-                return matchTerminalEdge(parseTreeNode, edge);
+                return matchTerminalEdge(edge);
 
             if (edge.label.equals("")) {
                 if (exists(rawToken(), follow.get(diagram.nonTerminal)))
                         return edge.nextNode;
             } else if (!edge.isTerminal()) {
                 if (exists(rawToken(), first.get(edge.label)))
-                    return matchNonTerminalEdge(parseTreeNode, edge);
+                    return matchNonTerminalEdge(edge);
             }
         }
 
         for (DiagramEdge edge : node.edges)
             if (!edge.label.equals("") && !edge.isTerminal() &&
                     exists("", first.get(edge.label)) && exists(rawToken(), follow.get(edge.label)))
-                return matchNonTerminalEdge(parseTreeNode, edge);
+                return matchNonTerminalEdge(edge);
 
         // Error Handling
         DiagramEdge edge = node.edges.get(0);
@@ -169,7 +167,7 @@ public class Parser {
             }
 
             errors.add(String.format("%d: Syntax Error! Missing '%s'", lexer.getLineNumber(), edge.label));
-            return matchTerminalEdge(parseTreeNode, edge);
+            return matchTerminalEdge(edge);
         } else {
             while (!exists(rawToken(), first.get(edge.label)) && !exists(rawToken(), follow.get(edge.label))) {
                 errors.add(String.format("%d: Syntax Error! Unexpected '%s' instead of '%s'", lexer.getLineNumber(),
@@ -183,31 +181,23 @@ public class Parser {
             }
             if (exists(rawToken(), first.get(edge.label)) ||
                     exists("", first.get(edge.label)) && exists(rawToken(), follow.get(edge.label)))
-                return matchNonTerminalEdge(parseTreeNode, edge);
+                return matchNonTerminalEdge(edge);
 
             errors.add(String.format("%d: Syntax Error! Missing '%s' like '%s'", lexer.getLineNumber(), edge.label,
                     nonTerminalDescription(edge.label)));
 
-            ParseTreeNode child = new ParseTreeNode(edge.label);
-            parseTreeNode.children.add(child);
             return edge.nextNode;
         }
     }
 
-    private ParseTreeNode traverse(Diagram diagram, ParseTreeNode parent) throws IOException {
-        ParseTreeNode parseTreeNode = new ParseTreeNode(diagram.nonTerminal);
-        if (parent != null)
-            parent.children.add(parseTreeNode);
-
+    private void traverse(Diagram diagram) throws IOException {
         DiagramNode node = diagram.start;
         while (node != diagram.finish && !finished) {
-            node = getNextNode(diagram, node, parseTreeNode);
+            node = getNextNode(diagram, node);
         }
-
-        return parseTreeNode;
     }
 
-    public ParseTreeNode parse() throws IOException {
-        return traverse(diagrams.get("PROGRAM"), null);
+    public void parse() throws IOException {
+        traverse(diagrams.get("PROGRAM"));
     }
 }
