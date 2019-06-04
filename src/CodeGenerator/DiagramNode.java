@@ -1,4 +1,4 @@
-package Parser;
+package CodeGenerator;
 
 import java.util.ArrayList;
 import java.util.List;

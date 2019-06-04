@@ -1,4 +1,4 @@
-package Parser;
+package CodeGenerator;
 
 import Lexer.Lexer;
 import Lexer.Token;
@@ -8,7 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
-public class Parser {
+public class CodeGenerator {
     private static Map<String, Diagram> diagrams;
     private static Map<String, List<String>> first;
     private static Map<String, List<String>> follow;
@@ -73,7 +73,7 @@ public class Parser {
         return false;
     }
 
-    public Parser(String filename) throws IOException {
+    public CodeGenerator(String filename) throws IOException {
         lexer = new Lexer(filename);
         currentToken = lexer.getNextToken();
         errors = new ArrayList<>();
@@ -129,12 +129,20 @@ public class Parser {
     }
 
     private DiagramNode matchTerminalEdge(DiagramEdge edge) throws IOException {
+        for (String routine : edge.preRoutines)
+            SemanticRoutine.call(routine, currentToken);
         updateCurrentToken();
+        for (String routine : edge.postRoutines)
+            SemanticRoutine.call(routine, currentToken);
         return edge.nextNode;
     }
 
     private DiagramNode matchNonTerminalEdge(DiagramEdge edge) throws IOException {
+        for (String routine : edge.preRoutines)
+            SemanticRoutine.call(routine, currentToken);
         traverse(diagrams.get(edge.label));
+        for (String routine : edge.postRoutines)
+            SemanticRoutine.call(routine, currentToken);
         return edge.nextNode;
     }
 
