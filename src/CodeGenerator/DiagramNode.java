@@ -3,11 +3,11 @@ package CodeGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DiagramNode {
-    public boolean isFinal;
-    public List<DiagramEdge> edges;
+class DiagramNode {
+    private boolean isFinal;
+    List<DiagramEdge> edges;
 
-    public DiagramNode(boolean isFinal) {
+    DiagramNode(boolean isFinal) {
         this.isFinal = isFinal;
         edges = new ArrayList<>();
     }

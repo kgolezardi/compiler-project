@@ -4,18 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Diagram {
-    public final String nonTerminal;
-    public final DiagramNode start, finish;
+class Diagram {
+    final String nonTerminal;
+    final DiagramNode start, finish;
 
-    public Diagram(String nonTerminal) {
+    Diagram(String nonTerminal) {
         this.nonTerminal = nonTerminal;
         start = new DiagramNode(false);
         finish = new DiagramNode(true);
     }
 
     /* Only first edge has pre routines */
-    public boolean createPath(Scanner scanner) {
+    boolean createPath(Scanner scanner) {
         String lastLabel = "";
         DiagramNode previousNode = null;
         List<String> preRoutines = new ArrayList<>();

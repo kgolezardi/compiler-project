@@ -13,9 +13,13 @@ public class CodeGenerator {
     private static Map<String, List<String>> first;
     private static Map<String, List<String>> follow;
     private Lexer lexer;
-    private Token currentToken;
+    Token currentToken;
     private List<String> errors;
     private boolean finished = false;
+    Stack<Object> semanticStack;
+    List<SymbolTableEntry> symbolTable;
+    int dataBlockAddress;
+//    List<String> programBlock;
 
     static {
         try {
@@ -77,6 +81,9 @@ public class CodeGenerator {
         lexer = new Lexer(filename);
         currentToken = lexer.getNextToken();
         errors = new ArrayList<>();
+        semanticStack = new Stack<>();
+        symbolTable = new ArrayList<>();
+        dataBlockAddress = 100;
     }
 
     public List<String> getErrors() {
@@ -130,19 +137,19 @@ public class CodeGenerator {
 
     private DiagramNode matchTerminalEdge(DiagramEdge edge) throws IOException {
         for (String routine : edge.preRoutines)
-            SemanticRoutine.call(routine, currentToken);
+            SemanticRoutine.call(routine, this);
         updateCurrentToken();
         for (String routine : edge.postRoutines)
-            SemanticRoutine.call(routine, currentToken);
+            SemanticRoutine.call(routine, this);
         return edge.nextNode;
     }
 
     private DiagramNode matchNonTerminalEdge(DiagramEdge edge) throws IOException {
         for (String routine : edge.preRoutines)
-            SemanticRoutine.call(routine, currentToken);
+            SemanticRoutine.call(routine, this);
         traverse(diagrams.get(edge.label));
         for (String routine : edge.postRoutines)
-            SemanticRoutine.call(routine, currentToken);
+            SemanticRoutine.call(routine, this);
         return edge.nextNode;
     }
 
@@ -205,7 +212,7 @@ public class CodeGenerator {
         }
     }
 
-    public void parse() throws IOException {
+    public void getCode() throws IOException {
         traverse(diagrams.get("PROGRAM"));
     }
 }

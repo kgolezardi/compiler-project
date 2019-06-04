@@ -1,10 +1,10 @@
 package Lexer;
 
-public class DfaEdge {
-    public String pattern;
-    public Integer state;
+class DfaEdge {
+    String pattern;
+    Integer state;
 
-    public DfaEdge(String pattern, Integer state) {
+    DfaEdge(String pattern, Integer state) {
         this.pattern = pattern;
         this.state = state;
     }
