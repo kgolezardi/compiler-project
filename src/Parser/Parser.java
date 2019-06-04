@@ -66,6 +66,13 @@ public class Parser {
         }
     }
 
+    private static boolean exists(String str, List<String> list) {
+        for (String element : list)
+            if (str.equals(element))
+                return true;
+        return false;
+    }
+
     public Parser(String filename) throws IOException {
         lexer = new Lexer(filename);
         currentToken = lexer.getNextToken();
@@ -74,6 +81,20 @@ public class Parser {
 
     public List<String> getErrors() {
         return errors;
+    }
+
+    private void setFinish() {
+        finished = true;
+    }
+
+    private void updateCurrentToken() throws IOException {
+        do {
+            currentToken = lexer.getNextToken();
+            if (currentToken.type == Token.TokenType.ERROR)
+                errors.add(String.format("%d: Syntax Error! Invalid input '%s'", lexer.getLineNumber(), currentToken.text));
+        } while (currentToken.type == Token.TokenType.ERROR ||
+                currentToken.type == Token.TokenType.WHITESPACE ||
+                currentToken.type == Token.TokenType.COMMENT);
     }
 
     private String rawToken() {
@@ -92,7 +113,34 @@ public class Parser {
         return "";
     }
 
-    public DiagramNode getNextNode(Diagram diagram, DiagramNode node, ParseTreeNode parseTreeNode) throws IOException {
+    private String nonTerminalDescription(String nonTerminal) {
+        StringBuilder description = new StringBuilder();
+        Diagram diagram = diagrams.get(nonTerminal);
+        DiagramNode node = diagram.start;
+        while (node != diagram.finish) {
+            DiagramEdge edge = node.edges.get(node.edges.size() - 1);
+            if (edge.isTerminal() || edge.label.equals(""))
+                description.append(edge.label);
+            else
+                description.append(nonTerminalDescription(edge.label));
+            node = edge.nextNode;
+        }
+        return description.toString();
+    }
+
+    private DiagramNode matchTerminalEdge(ParseTreeNode parseTreeNode, DiagramEdge edge) throws IOException {
+        updateCurrentToken();
+        ParseTreeNode child = new ParseTreeNode(edge.label);
+        parseTreeNode.children.add(child);
+        return edge.nextNode;
+    }
+
+    private DiagramNode matchNonTerminalEdge(ParseTreeNode parseTreeNode, DiagramEdge edge) throws IOException {
+        traverse(diagrams.get(edge.label), parseTreeNode);
+        return edge.nextNode;
+    }
+
+    private DiagramNode getNextNode(Diagram diagram, DiagramNode node, ParseTreeNode parseTreeNode) throws IOException {
         for (DiagramEdge edge : node.edges) {
             if (edge.isTerminal() && edge.label.equals(rawToken()))
                 return matchTerminalEdge(parseTreeNode, edge);
@@ -144,54 +192,6 @@ public class Parser {
             parseTreeNode.children.add(child);
             return edge.nextNode;
         }
-    }
-
-    private void setFinish() {
-        finished = true;
-    }
-
-    private String nonTerminalDescription(String nonTerminal) {
-        StringBuilder description = new StringBuilder();
-        Diagram diagram = diagrams.get(nonTerminal);
-        DiagramNode node = diagram.start;
-        while (node != diagram.finish) {
-            DiagramEdge edge = node.edges.get(node.edges.size() - 1);
-            if (edge.isTerminal() || edge.label.equals(""))
-                description.append(edge.label);
-            else
-                description.append(nonTerminalDescription(edge.label));
-            node = edge.nextNode;
-        }
-        return description.toString();
-    }
-
-    private DiagramNode matchTerminalEdge(ParseTreeNode parseTreeNode, DiagramEdge edge) throws IOException {
-        updateCurrentToken();
-        ParseTreeNode child = new ParseTreeNode(edge.label);
-        parseTreeNode.children.add(child);
-        return edge.nextNode;
-    }
-
-    private DiagramNode matchNonTerminalEdge(ParseTreeNode parseTreeNode, DiagramEdge edge) throws IOException {
-        traverse(diagrams.get(edge.label), parseTreeNode);
-        return edge.nextNode;
-    }
-
-    private void updateCurrentToken() throws IOException {
-        do {
-            currentToken = lexer.getNextToken();
-            if (currentToken.type == Token.TokenType.ERROR)
-                errors.add(String.format("%d: Syntax Error! Invalid input '%s'", lexer.getLineNumber(), currentToken.text));
-        } while (currentToken.type == Token.TokenType.ERROR ||
-                currentToken.type == Token.TokenType.WHITESPACE ||
-                currentToken.type == Token.TokenType.COMMENT);
-    }
-
-    private static boolean exists(String str, List<String> list) {
-        for (String element : list)
-            if (str.equals(element))
-                return true;
-        return false;
     }
 
     private ParseTreeNode traverse(Diagram diagram, ParseTreeNode parent) throws IOException {
