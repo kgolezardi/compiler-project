@@ -16,9 +16,10 @@ public class CodeGenerator {
     Token currentToken;
     private List<String> errors;
     private boolean finished = false;
-    Stack<Object> semanticStack;
+    Stack<String> semanticStack;
     List<SymbolTableEntry> symbolTable;
     int dataBlockAddress;
+    int tempBlockAddress;
     List<String> programBlock;
 
     static {
@@ -84,6 +85,7 @@ public class CodeGenerator {
         semanticStack = new Stack<>();
         symbolTable = new ArrayList<>();
         dataBlockAddress = 500;
+        tempBlockAddress = 1000;
         programBlock = new ArrayList<>();
     }
 

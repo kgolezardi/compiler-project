@@ -9,5 +9,9 @@ public class Main {
         for (SymbolTableEntry ste : codeGenerator.symbolTable) {
             System.out.printf("%d %s %s\n", ste.address, ste.lexeme, ste.type);
         }
+
+        for (String command : codeGenerator.programBlock) {
+            System.out.printf("%s\n", command);
+        }
     }
 }
