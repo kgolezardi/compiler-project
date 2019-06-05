@@ -19,7 +19,7 @@ public class CodeGenerator {
     Stack<Object> semanticStack;
     List<SymbolTableEntry> symbolTable;
     int dataBlockAddress;
-//    List<String> programBlock;
+    List<String> programBlock;
 
     static {
         try {
@@ -83,7 +83,8 @@ public class CodeGenerator {
         errors = new ArrayList<>();
         semanticStack = new Stack<>();
         symbolTable = new ArrayList<>();
-        dataBlockAddress = 100;
+        dataBlockAddress = 500;
+        programBlock = new ArrayList<>();
     }
 
     public List<String> getErrors() {
