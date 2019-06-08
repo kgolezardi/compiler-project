@@ -42,11 +42,11 @@ class SemanticRoutines {
             case "#jp":
                 jump(codeGenerator);
                 break;
-            case "#while":
+            case "#end_while":
                 endWhile(codeGenerator);
                 break;
             case "#label":
-                label(codeGenerator);
+                pushTemp(codeGenerator);
                 break;
             case "#continue":
                 continueWhile(codeGenerator);
@@ -54,11 +54,73 @@ class SemanticRoutines {
             case "#break":
                 breakWhileSwitch(codeGenerator);
                 break;
+            case "#check_case":
+                checkCase(codeGenerator);
+                break;
+            case "#jpf_case":
+                jumpFalseCase(codeGenerator);
+                break;
+            case "#end_switch":
+                endSwitch(codeGenerator);
+                break;
+            case "#ptemp":
+                pushTemp(codeGenerator);
+                break;
+            case "#case_undone_true":
+                caseUndoneTrue(codeGenerator);
+                break;
+            case "#case_undone_false":
+                caseUndoneFalse(codeGenerator);
+                break;
             case "#pop":
                 codeGenerator.semanticStack.pop();
                 break;
+            default:
+                System.err.printf("No semantic routine found for '%s'\n", routineName);
         }
 //        System.out.println(codeGenerator.semanticStack.size() + routineName);
+    }
+
+    private static void caseUndoneFalse(CodeGenerator codeGenerator) {
+        int undone = Integer.valueOf(codeGenerator.semanticStack
+                .elementAt(codeGenerator.semanticStack.size() - 4));
+        codeGenerator.programBlock.add(String.format("(ASSIGN, #0, %d, )", undone));
+    }
+
+    private static void caseUndoneTrue(CodeGenerator codeGenerator) {
+        codeGenerator.programBlock.add(String.format("(ASSIGN, #1, %d, )", codeGenerator.tempBlockAddress));
+        codeGenerator.semanticStack.push(String.valueOf(codeGenerator.tempBlockAddress));
+        codeGenerator.tempBlockAddress += 4;
+    }
+
+    private static void checkCase(CodeGenerator codeGenerator) {
+        String number = codeGenerator.semanticStack.pop();
+        String expression = codeGenerator.semanticStack.peek();
+        int undone = Integer.valueOf(codeGenerator.semanticStack
+                .elementAt(codeGenerator.semanticStack.size() - 2));
+        codeGenerator.programBlock.add(String.format("(JPF, %d, %d, )", undone, codeGenerator.programBlock.size() + 4));
+        codeGenerator.programBlock.add(String.format("(EQ, %s, %s, %s)", expression, number,
+                codeGenerator.tempBlockAddress));
+        codeGenerator.semanticStack.push(String.valueOf(codeGenerator.tempBlockAddress));
+        codeGenerator.tempBlockAddress += 4;
+    }
+
+    private static void endSwitch(CodeGenerator codeGenerator) {
+        codeGenerator.semanticStack.pop(); // EXPRESSION
+        codeGenerator.semanticStack.pop(); // Case Undone Temp
+        int tempAssignAddress = Integer.valueOf(codeGenerator.semanticStack.pop());
+        String breakTemp = codeGenerator.semanticStack.pop();
+        codeGenerator.semanticStack.pop(); // #pinput switch
+
+        codeGenerator.programBlock.set(tempAssignAddress, String.format("(ASSIGN, #%s, %s, )",
+                codeGenerator.programBlock.size(), breakTemp));
+    }
+
+    private static void jumpFalseCase(CodeGenerator codeGenerator) {
+        int programBlockAddress = Integer.valueOf(codeGenerator.semanticStack.pop());
+        String eqCheck = codeGenerator.semanticStack.pop();
+        codeGenerator.programBlock.set(programBlockAddress, String.format("(JPF, %s, %s, )",
+                eqCheck, codeGenerator.programBlock.size()));
     }
 
     private static int getBreakPointer(CodeGenerator codeGenerator) {
@@ -80,7 +142,7 @@ class SemanticRoutines {
                 Integer.valueOf(codeGenerator.semanticStack.elementAt(getBreakPointer(codeGenerator) + 2)) + 1));
     }
 
-    private static void label(CodeGenerator codeGenerator) {
+    private static void pushTemp(CodeGenerator codeGenerator) {
         codeGenerator.semanticStack.push(String.valueOf(codeGenerator.tempBlockAddress));
         codeGenerator.tempBlockAddress += 4;
     }
@@ -90,8 +152,10 @@ class SemanticRoutines {
         String condition = codeGenerator.semanticStack.pop();
         int tempAssignAddress = Integer.valueOf(codeGenerator.semanticStack.pop());
         String temp = codeGenerator.semanticStack.pop();
+        codeGenerator.semanticStack.pop(); // #pinput while
+
         codeGenerator.programBlock.set(tempAssignAddress, String.format("(ASSIGN, #%s, %s, )",
-                codeGenerator.programBlock.size() + 1 , temp));
+                codeGenerator.programBlock.size() + 1, temp));
         codeGenerator.programBlock.set(jpfAddress, String.format("(JPF, %s, %s, )", condition,
                 codeGenerator.programBlock.size() + 1));
         codeGenerator.programBlock.add(String.format("(JP, %s, , )", tempAssignAddress + 1));
