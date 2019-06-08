@@ -10,8 +10,11 @@ public class Main {
             System.out.printf("%d %s %s\n", ste.address, ste.lexeme, ste.type);
         }
 
-        for (String command : codeGenerator.programBlock) {
-            System.out.printf("%s\n", command);
+        for (String error : codeGenerator.getErrors())
+            System.err.println(error);
+
+        for (int i = 0; i < codeGenerator.programBlock.size(); i++) {
+            System.out.printf("%-2d: %s\n", i, codeGenerator.programBlock.get(i));
         }
     }
 }

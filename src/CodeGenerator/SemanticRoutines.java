@@ -3,7 +3,7 @@ package CodeGenerator;
 import java.util.HashMap;
 import java.util.Map;
 
-class SemanticRoutine {
+class SemanticRoutines {
     static void call(String routineName, CodeGenerator codeGenerator) {
         switch (routineName) {
             case "#pinput":
@@ -43,7 +43,7 @@ class SemanticRoutine {
                 jump(codeGenerator);
                 break;
             case "#while":
-                jumpFalseWhile(codeGenerator);
+                endWhile(codeGenerator);
                 break;
             case "#label":
                 label(codeGenerator);
@@ -52,7 +52,7 @@ class SemanticRoutine {
                 continueWhile(codeGenerator);
                 break;
             case "#break":
-                breakWhileCase(codeGenerator);
+                breakWhileSwitch(codeGenerator);
                 break;
             case "#pop":
                 codeGenerator.semanticStack.pop();
@@ -61,33 +61,40 @@ class SemanticRoutine {
 //        System.out.println(codeGenerator.semanticStack.size() + routineName);
     }
 
-    private static void breakWhileCase(CodeGenerator codeGenerator) {
-        String temp = codeGenerator.semanticStack.elementAt(codeGenerator.semanticStack.size() - 4);
-        codeGenerator.programBlock.add(String.format("(JP, @%s, , )", temp));
+    private static int getBreakPointer(CodeGenerator codeGenerator) {
+        for (int i = codeGenerator.semanticStack.size() - 1; i >= 0; i--) {
+            String element = codeGenerator.semanticStack.elementAt(i);
+            if (element.equals("while") || element.equals("switch"))
+                return i;
+        }
+        return -1;
+    }
+
+    private static void breakWhileSwitch(CodeGenerator codeGenerator) {
+        codeGenerator.programBlock.add(String.format("(JP, @%s, , )",
+                codeGenerator.semanticStack.elementAt(getBreakPointer(codeGenerator) + 1)));
     }
 
     private static void continueWhile(CodeGenerator codeGenerator) {
-        String labelAddress = codeGenerator.semanticStack.elementAt(codeGenerator.semanticStack.size() - 3);
-        codeGenerator.programBlock.add(String.format("(JP, %s, , )", labelAddress));
+        codeGenerator.programBlock.add(String.format("(JP, %s, , )",
+                Integer.valueOf(codeGenerator.semanticStack.elementAt(getBreakPointer(codeGenerator) + 2)) + 1));
     }
 
     private static void label(CodeGenerator codeGenerator) {
         codeGenerator.semanticStack.push(String.valueOf(codeGenerator.tempBlockAddress));
         codeGenerator.tempBlockAddress += 4;
-        codeGenerator.programBlock.add("");
-        codeGenerator.semanticStack.push(String.valueOf(codeGenerator.programBlock.size()));
     }
 
-    private static void jumpFalseWhile(CodeGenerator codeGenerator) {
-        String saveAddress = codeGenerator.semanticStack.pop();
+    private static void endWhile(CodeGenerator codeGenerator) {
+        int jpfAddress = Integer.valueOf(codeGenerator.semanticStack.pop());
         String condition = codeGenerator.semanticStack.pop();
-        String labelAddress = codeGenerator.semanticStack.pop();
+        int tempAssignAddress = Integer.valueOf(codeGenerator.semanticStack.pop());
         String temp = codeGenerator.semanticStack.pop();
-        codeGenerator.programBlock.set(Integer.valueOf(labelAddress) - 1, String.format("(ASSIGN, #%s, %s, )",
+        codeGenerator.programBlock.set(tempAssignAddress, String.format("(ASSIGN, #%s, %s, )",
                 codeGenerator.programBlock.size() + 1 , temp));
-        codeGenerator.programBlock.set(Integer.valueOf(saveAddress), String.format("(JPF, %s, %s, )", condition,
+        codeGenerator.programBlock.set(jpfAddress, String.format("(JPF, %s, %s, )", condition,
                 codeGenerator.programBlock.size() + 1));
-        codeGenerator.programBlock.add(String.format("(JP, %s, , )", labelAddress));
+        codeGenerator.programBlock.add(String.format("(JP, %s, , )", tempAssignAddress + 1));
     }
 
     private static void jump(CodeGenerator codeGenerator) {

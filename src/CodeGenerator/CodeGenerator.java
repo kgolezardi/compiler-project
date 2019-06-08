@@ -140,19 +140,19 @@ public class CodeGenerator {
 
     private DiagramNode matchTerminalEdge(DiagramEdge edge) throws IOException {
         for (String routine : edge.preRoutines)
-            SemanticRoutine.call(routine, this);
+            SemanticRoutines.call(routine, this);
         updateCurrentToken();
         for (String routine : edge.postRoutines)
-            SemanticRoutine.call(routine, this);
+            SemanticRoutines.call(routine, this);
         return edge.nextNode;
     }
 
     private DiagramNode matchNonTerminalEdge(DiagramEdge edge) throws IOException {
         for (String routine : edge.preRoutines)
-            SemanticRoutine.call(routine, this);
+            SemanticRoutines.call(routine, this);
         traverse(diagrams.get(edge.label));
         for (String routine : edge.postRoutines)
-            SemanticRoutine.call(routine, this);
+            SemanticRoutines.call(routine, this);
         return edge.nextNode;
     }
 
