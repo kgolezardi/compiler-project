@@ -4,30 +4,30 @@ DECLARATION_LIST -> DECLARATION DECLARATION_LIST |  .
 DECLARATION -> #pinput TYPE_SPECIFIER #pinput id DECLARATION1 .
 DECLARATION1 -> VAR_DECLARATION_CONT | FUN_DECLARATION_CONT .
 VAR_DECLARATION_CONT -> #declare_var ; | [ #pinput num ] #declare_array ; .
-FUN_DECLARATION_CONT -> ( PARAMS ) #pop #pop COMPOUND_STMT .
+FUN_DECLARATION_CONT -> #pfunkeyword ( PARAMS ) #declare_fun COMPOUND_STMT #end_function .
 
 TYPE_SPECIFIER -> int | void .
 
 PARAMS -> PARAMS_INT | PARAMS_VOID .
-PARAMS_INT -> int PARAM_LIST_CONT .
-PARAMS_VOID -> void PARAMS_VOID1 .
-PARAMS_VOID1 -> PARAM_LIST_CONT | .
+PARAMS_INT -> #pinput int PARAM_LIST_CONT .
+PARAMS_VOID -> #pinput void PARAMS_VOID1 .
+PARAMS_VOID1 -> PARAM_LIST_CONT | #pop .
 
 PARAM_LIST_CONT -> PARAM_CONT PARAM_LIST1 .
-PARAM_LIST -> PARAM PARAM_LIST1 .
-PARAM_LIST1 -> , PARAM_LIST |  .
-PARAM_CONT -> id PARAM1 .
-PARAM -> TYPE_SPECIFIER PARAM_CONT .
+PARAM_CONT -> #pinput id PARAM1 .
 PARAM1 -> [ ] |  .
+PARAM_LIST1 -> , PARAM_LIST |  .
+PARAM_LIST -> PARAM PARAM_LIST1 .
+PARAM -> #pinput TYPE_SPECIFIER PARAM_CONT .
 
 COMPOUND_STMT -> { DECLARATION_LIST STATEMENT_LIST } .
 STATEMENT_LIST -> STATEMENT STATEMENT_LIST |  .
 STATEMENT -> EXPRESSION_STMT | COMPOUND_STMT | SELECTION_STMT | ITERATION_STMT | RETURN_STMT | SWITCH_STMT .
 EXPRESSION_STMT -> EXPRESSION #pop ; | continue #continue ; | break #break ; | ; .
 SELECTION_STMT -> if ( EXPRESSION ) #save STATEMENT else #jpf_save STATEMENT #jp .
-ITERATION_STMT -> #pinput while #label #save ( EXPRESSION ) #save STATEMENT #end_while .
+ITERATION_STMT -> #pinput while #ptemp #save ( EXPRESSION ) #save STATEMENT #end_while .
 RETURN_STMT -> return RETURN_STMT1 .
-RETURN_STMT1 -> ; | EXPRESSION ; .
+RETURN_STMT1 -> #return_void ; | EXPRESSION #return_expression ; .
 SWITCH_STMT -> #pinput switch #ptemp #save #case_undone_true ( EXPRESSION ) { CASE_STMTS DEFAULT_STMT } #end_switch .
 CASE_STMTS -> CASE_STMT CASE_STMTS |  .
 CASE_STMT -> case #pnum num #check_case #save : #case_undone_false STATEMENT_LIST #jpf_case .
@@ -57,14 +57,14 @@ ADDOP -> + | - .
 TERM -> SIGNED_FACTOR TERM1 .
 TERM1 -> #pinput * SIGNED_FACTOR #calcop TERM1 |  .
 TERM_NO_ID -> SIGNED_FACTOR_NO_ID TERM1 .
-TERM_ID_CONT_NO_VAR1 -> ( ARGS ) #function_call TERM1 .
+TERM_ID_CONT_NO_VAR1 -> #pfunkeyword ( ARGS ) #function_call TERM1 .
 TERM_ID_CONT_VAR1_CONT -> TERM1 .
 
 SIGNED_FACTOR -> FACTOR | #pinput ADDOP FACTOR #calc_signed_factor .
 SIGNED_FACTOR_NO_ID -> FACTOR_NO_ID | #pinput ADDOP FACTOR #calc_signed_factor .
 
 FACTOR_NO_ID -> ( EXPRESSION ) | #pnum num .
-FACTOR_ID_CONT -> VAR1 | ( ARGS ) #function_call .
+FACTOR_ID_CONT -> VAR1 | #pfunkeyword ( ARGS ) #function_call .
 FACTOR -> ( EXPRESSION ) | #pid id FACTOR_ID_CONT | #pnum num .
 
 ARGS -> ARG_LIST |  .

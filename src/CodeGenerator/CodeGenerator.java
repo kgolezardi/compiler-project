@@ -147,6 +147,14 @@ public class CodeGenerator {
         return edge.nextNode;
     }
 
+    private DiagramNode matchEpsilonEdge(DiagramEdge edge) throws IOException {
+        for (String routine : edge.preRoutines)
+            SemanticRoutines.call(routine, this);
+        for (String routine : edge.postRoutines)
+            SemanticRoutines.call(routine, this);
+        return edge.nextNode;
+    }
+
     private DiagramNode matchNonTerminalEdge(DiagramEdge edge) throws IOException {
         for (String routine : edge.preRoutines)
             SemanticRoutines.call(routine, this);
@@ -163,7 +171,7 @@ public class CodeGenerator {
 
             if (edge.label.equals("")) {
                 if (exists(rawToken(), follow.get(diagram.nonTerminal)))
-                        return edge.nextNode;
+                        return matchEpsilonEdge(edge);
             } else if (!edge.isTerminal()) {
                 if (exists(rawToken(), first.get(edge.label)))
                     return matchNonTerminalEdge(edge);

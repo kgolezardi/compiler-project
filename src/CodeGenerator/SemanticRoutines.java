@@ -1,6 +1,8 @@
 package CodeGenerator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 class SemanticRoutines {
@@ -45,9 +47,6 @@ class SemanticRoutines {
             case "#end_while":
                 endWhile(codeGenerator);
                 break;
-            case "#label":
-                pushTemp(codeGenerator);
-                break;
             case "#continue":
                 continueWhile(codeGenerator);
                 break;
@@ -72,6 +71,24 @@ class SemanticRoutines {
             case "#case_undone_false":
                 caseUndoneFalse(codeGenerator);
                 break;
+            case "#pfunkeyword":
+                pushFunctionKeyword(codeGenerator);
+                break;
+            case "#declare_fun":
+                declareFunction(codeGenerator);
+                break;
+            case "#function_call":
+                functionCall(codeGenerator);
+                break;
+            case "#return_expression":
+                returnExpression(codeGenerator);
+                break;
+            case "#return_void":
+                returnVoid(codeGenerator);
+                break;
+            case "#end_function":
+                endFunction(codeGenerator);
+                break;
             case "#pop":
                 codeGenerator.semanticStack.pop();
                 break;
@@ -79,6 +96,80 @@ class SemanticRoutines {
                 System.err.printf("No semantic routine found for '%s'\n", routineName);
         }
 //        System.out.println(codeGenerator.semanticStack.size() + routineName);
+    }
+
+    private static void endFunction(CodeGenerator codeGenerator) {
+        SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(codeGenerator.semanticStack.pop()));
+        codeGenerator.semanticStack.pop(); // #declare_function (#function)
+        codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
+    }
+
+    private static void returnVoid(CodeGenerator codeGenerator) {
+        SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(
+                codeGenerator.semanticStack.elementAt(getStackPointer(codeGenerator, "#function") + 1)));
+        codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
+    }
+
+    private static void returnExpression(CodeGenerator codeGenerator) {
+        SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(
+                codeGenerator.semanticStack.elementAt(getStackPointer(codeGenerator, "#function") + 1)));
+        codeGenerator.programBlock.add(String.format("(ASSIGN, %s, %d, )", codeGenerator.semanticStack.pop(),
+                entry.attribute.getOutputAddress()));
+        codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
+    }
+
+    private static void functionCall(CodeGenerator codeGenerator) {
+        List<String> arguments = new ArrayList<>();
+        while (!codeGenerator.semanticStack.peek().equals("#function")) {
+            arguments.add(codeGenerator.semanticStack.pop());
+        }
+        codeGenerator.semanticStack.pop();
+
+        SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(codeGenerator.semanticStack.pop()));
+        for (int i = 0; i < arguments.size(); i++) {
+            codeGenerator.programBlock.add(String.format("(ASSIGN, %s, %d, )", arguments.get(i),
+                    entry.attribute.dataBlockAddress + i * 4));
+        }
+        codeGenerator.programBlock.add(String.format("(ASSIGN, #%d, %d, )", codeGenerator.programBlock.size() + 2,
+                entry.attribute.getReturnAddress()));
+        codeGenerator.programBlock.add(String.format("(JP, %s, , )", entry.attribute.jumpAddress));
+
+        if (entry.type == SymbolTableEntry.TypeSpecifier.VOID)
+            codeGenerator.semanticStack.push("#void");
+        else
+            codeGenerator.semanticStack.push(String.valueOf(entry.attribute.getOutputAddress()));
+    }
+
+    private static void declareFunction(CodeGenerator codeGenerator) {
+        int dbAddress = codeGenerator.dataBlockAddress;
+
+        int argumentNumber = 0;
+        while (!codeGenerator.semanticStack.peek().equals("#function")) {
+            String name = codeGenerator.semanticStack.pop();
+            SymbolTableEntry.TypeSpecifier type = SymbolTableEntry.TypeSpecifier.valueOf(
+                    (codeGenerator.semanticStack.pop()).toUpperCase());
+            codeGenerator.symbolTable.add(new SymbolTableEntry(codeGenerator.dataBlockAddress, name, type));
+            codeGenerator.dataBlockAddress += 4;
+            argumentNumber++;
+        }
+        codeGenerator.semanticStack.pop();
+
+        String name = codeGenerator.semanticStack.pop();
+        SymbolTableEntry.TypeSpecifier type = SymbolTableEntry.TypeSpecifier.valueOf(
+                (codeGenerator.semanticStack.pop()).toUpperCase());
+        SymbolTableEntry entry = new SymbolTableEntry(codeGenerator.symbolTable.size(), name, type,
+                new SymbolTableAttribute(argumentNumber, dbAddress, codeGenerator.programBlock.size()));
+        codeGenerator.symbolTable.add(entry);
+
+        // Output and return address
+        codeGenerator.dataBlockAddress += 8;
+
+        codeGenerator.semanticStack.push("#function");
+        codeGenerator.semanticStack.push(String.valueOf(codeGenerator.symbolTable.size() - 1));
+    }
+
+    private static void pushFunctionKeyword(CodeGenerator codeGenerator) {
+        codeGenerator.semanticStack.push("#function");
     }
 
     private static void caseUndoneFalse(CodeGenerator codeGenerator) {
@@ -123,13 +214,17 @@ class SemanticRoutines {
                 eqCheck, codeGenerator.programBlock.size()));
     }
 
-    private static int getBreakPointer(CodeGenerator codeGenerator) {
+    private static int getStackPointer(CodeGenerator codeGenerator, String str) {
         for (int i = codeGenerator.semanticStack.size() - 1; i >= 0; i--) {
             String element = codeGenerator.semanticStack.elementAt(i);
-            if (element.equals("while") || element.equals("switch"))
+            if (element.equals(str))
                 return i;
         }
         return -1;
+    }
+
+    private static int getBreakPointer(CodeGenerator codeGenerator) {
+        return Math.max(getStackPointer(codeGenerator, "while"), getStackPointer(codeGenerator, "switch"));
     }
 
     private static void breakWhileSwitch(CodeGenerator codeGenerator) {
