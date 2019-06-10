@@ -12,9 +12,9 @@ public class CodeGenerator {
     private static Map<String, Diagram> diagrams;
     private static Map<String, List<String>> first;
     private static Map<String, List<String>> follow;
-    private Lexer lexer;
+    Lexer lexer;
     Token currentToken;
-    private List<String> errors;
+    List<String> errors;
     private boolean finished = false;
     Stack<String> semanticStack;
     List<SymbolTableEntry> symbolTable;

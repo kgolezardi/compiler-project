@@ -89,6 +89,12 @@ class SemanticRoutines {
             case "#end_function":
                 endFunction(codeGenerator);
                 break;
+            case "#init":
+                init(codeGenerator);
+                break;
+            case "#finalize":
+                finalize(codeGenerator);
+                break;
             case "#pop":
                 codeGenerator.semanticStack.pop();
                 break;
@@ -98,16 +104,49 @@ class SemanticRoutines {
 //        System.out.println(codeGenerator.semanticStack.size() + routineName);
     }
 
+    private static void finalize(CodeGenerator codeGenerator) {
+        for (SymbolTableEntry entry : codeGenerator.symbolTable) {
+            if (entry.lexeme.equals("main") && entry.type.equals(SymbolTableEntry.TypeSpecifier.VOID)) {
+                codeGenerator.programBlock.set(0, String.format("(JP, %d, , )", entry.attribute.jumpAddress));
+                codeGenerator.programBlock.set(1, String.format("(JP, %d, , )", codeGenerator.programBlock.size()));
+                return;
+            }
+        }
+
+        codeGenerator.errors.add(String.format("%d: main function not found!", codeGenerator.lexer.getLineNumber()));
+    }
+
+    private static void init(CodeGenerator codeGenerator) {
+        codeGenerator.programBlock.add("");
+        codeGenerator.programBlock.add("");
+
+        codeGenerator.symbolTable.add(new SymbolTableEntry(0, "output",
+                SymbolTableEntry.TypeSpecifier.VOID,
+                new SymbolTableAttribute(1, codeGenerator.dataBlockAddress, 2)));
+        codeGenerator.programBlock.add(String.format("(PRINT, %s, , )", codeGenerator.dataBlockAddress));
+        codeGenerator.programBlock.add(String.format("(JP, @%s, , )",
+                codeGenerator.symbolTable.get(0).attribute.getReturnAddress()));
+        codeGenerator.semanticStack.push("#function");
+        codeGenerator.semanticStack.push("0");
+        codeGenerator.dataBlockAddress += 12;
+    }
+
     private static void endFunction(CodeGenerator codeGenerator) {
         SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(codeGenerator.semanticStack.pop()));
         codeGenerator.semanticStack.pop(); // #declare_function (#function)
-        codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
+        if (!(entry.lexeme.equals("main") && entry.type.equals(SymbolTableEntry.TypeSpecifier.VOID)))
+            codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
+        else
+            codeGenerator.programBlock.add(String.format("(JP, %d, , )", 1));
     }
 
     private static void returnVoid(CodeGenerator codeGenerator) {
         SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(
                 codeGenerator.semanticStack.elementAt(getStackPointer(codeGenerator, "#function") + 1)));
-        codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
+        if (!(entry.lexeme.equals("main") && entry.type.equals(SymbolTableEntry.TypeSpecifier.VOID)))
+            codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
+        else
+            codeGenerator.programBlock.add(String.format("(JP, %d, , )", 1));
     }
 
     private static void returnExpression(CodeGenerator codeGenerator) {
@@ -126,14 +165,18 @@ class SemanticRoutines {
         codeGenerator.semanticStack.pop();
 
         SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(codeGenerator.semanticStack.pop()));
+        if (arguments.size() != entry.attribute.argumentNumber)
+            codeGenerator.errors.add(String.format("%d: Mismatch in numbers of arguments of '%s'",
+                    codeGenerator.lexer.getLineNumber(), entry.lexeme));
+
         for (int i = 0; i < arguments.size(); i++) {
             codeGenerator.programBlock.add(String.format("(ASSIGN, %s, %d, )", arguments.get(i),
                     entry.attribute.dataBlockAddress + i * 4));
         }
-        codeGenerator.programBlock.add(String.format("(ASSIGN, #%d, %d, )", codeGenerator.programBlock.size() + 2,
+
+        codeGenerator.programBlock.add(String.format("(ASSIGN, #%s, %s, )", codeGenerator.programBlock.size() + 2,
                 entry.attribute.getReturnAddress()));
         codeGenerator.programBlock.add(String.format("(JP, %s, , )", entry.attribute.jumpAddress));
-
         if (entry.type == SymbolTableEntry.TypeSpecifier.VOID)
             codeGenerator.semanticStack.push("#void");
         else
@@ -224,7 +267,20 @@ class SemanticRoutines {
     }
 
     private static int getBreakPointer(CodeGenerator codeGenerator) {
-        return Math.max(getStackPointer(codeGenerator, "while"), getStackPointer(codeGenerator, "switch"));
+        int breakPointer = Math.max(getStackPointer(codeGenerator, "while"),
+                getStackPointer(codeGenerator, "switch"));
+        if (breakPointer == -1)
+            codeGenerator.errors.add(String.format("%d: No 'while' or 'switch' found for 'break'.",
+                    codeGenerator.lexer.getLineNumber()));
+        return breakPointer;
+    }
+
+    private static int getContinuePointer(CodeGenerator codeGenerator) {
+        int continuePointer = getStackPointer(codeGenerator, "while");
+        if (continuePointer == -1)
+            codeGenerator.errors.add(String.format("%d: No 'while' found for 'continue'.",
+                    codeGenerator.lexer.getLineNumber()));
+        return continuePointer;
     }
 
     private static void breakWhileSwitch(CodeGenerator codeGenerator) {
@@ -234,7 +290,8 @@ class SemanticRoutines {
 
     private static void continueWhile(CodeGenerator codeGenerator) {
         codeGenerator.programBlock.add(String.format("(JP, %s, , )",
-                Integer.valueOf(codeGenerator.semanticStack.elementAt(getBreakPointer(codeGenerator) + 2)) + 1));
+                Integer.valueOf(codeGenerator.semanticStack.elementAt(
+                        getContinuePointer(codeGenerator) + 2)) + 1));
     }
 
     private static void pushTemp(CodeGenerator codeGenerator) {
@@ -304,6 +361,12 @@ class SemanticRoutines {
         command.put("*", "MULT");
         command.put("<", "LT");
         command.put("==", "EQ");
+
+        // TODO: Handle void operand
+        if (operand1.equals("#void") || operand2.equals("#void"))
+            codeGenerator.errors.add(String.format("%d: Type mismatch in operands.",
+                    codeGenerator.lexer.getLineNumber()));
+
         codeGenerator.programBlock.add(String.format("(%s, %s, %s, %s)", command.get(operator), operand1, operand2,
                 codeGenerator.tempBlockAddress));
         codeGenerator.semanticStack.push(String.valueOf(codeGenerator.tempBlockAddress));
@@ -342,6 +405,9 @@ class SemanticRoutines {
                 (codeGenerator.semanticStack.pop()).toUpperCase());
         codeGenerator.symbolTable.add(new SymbolTableEntry(codeGenerator.dataBlockAddress, name, type));
         codeGenerator.dataBlockAddress += 4;
+
+        if (type == SymbolTableEntry.TypeSpecifier.VOID)
+            codeGenerator.errors.add(String.format("%d: Illegal type of void.", codeGenerator.lexer.getLineNumber()));
     }
 
     private static void declareArray(CodeGenerator codeGenerator) {
@@ -353,6 +419,9 @@ class SemanticRoutines {
         codeGenerator.programBlock.add(String.format("(ASSIGN, #%d, %d, )", codeGenerator.dataBlockAddress + 4,
                 codeGenerator.dataBlockAddress));
         codeGenerator.dataBlockAddress += (size + 1) * 4;
+
+        if (type == SymbolTableEntry.TypeSpecifier.VOID)
+            codeGenerator.errors.add(String.format("%d: Illegal type of void.", codeGenerator.lexer.getLineNumber()));
     }
 
 
