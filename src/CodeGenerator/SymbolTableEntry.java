@@ -1,7 +1,7 @@
 package CodeGenerator;
 
 class SymbolTableEntry {
-    public enum TypeSpecifier {INT, VOID}
+    public enum TypeSpecifier {INT, VOID, ARRAY}
 
     int address;
     String lexeme;

@@ -389,9 +389,9 @@ class SemanticRoutines {
 
         if (operand1.equals("#void") || operand2.equals("#void") ||
                 isInteger(operand1) &&
-                        codeGenerator.getSymbolByAddress(Integer.valueOf(operand1)).type == SymbolTableEntry.TypeSpecifier.VOID ||
+                        codeGenerator.getSymbolByAddress(Integer.valueOf(operand1)).type != SymbolTableEntry.TypeSpecifier.INT ||
                 isInteger(operand2) &&
-                codeGenerator.getSymbolByAddress(Integer.valueOf(operand2)).type == SymbolTableEntry.TypeSpecifier.VOID)
+                codeGenerator.getSymbolByAddress(Integer.valueOf(operand2)).type != SymbolTableEntry.TypeSpecifier.INT)
             codeGenerator.errors.add(String.format("%d: Type mismatch in operands.",
                     codeGenerator.lexer.getLineNumber()));
 
@@ -455,7 +455,8 @@ class SemanticRoutines {
         String name = codeGenerator.semanticStack.pop();
         SymbolTableEntry.TypeSpecifier type = SymbolTableEntry.TypeSpecifier.valueOf(
                 (codeGenerator.semanticStack.pop()).toUpperCase());
-        codeGenerator.symbolTable.add(new SymbolTableEntry(codeGenerator.dataBlockAddress, name, type));
+        codeGenerator.symbolTable.add(new SymbolTableEntry(codeGenerator.dataBlockAddress, name,
+                SymbolTableEntry.TypeSpecifier.ARRAY));
         codeGenerator.programBlock.add(String.format("(ASSIGN, #%d, %d, )", codeGenerator.dataBlockAddress + 4,
                 codeGenerator.dataBlockAddress));
         codeGenerator.dataBlockAddress += (size + 1) * 4;
