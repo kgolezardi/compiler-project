@@ -7,108 +7,115 @@ import java.util.Map;
 
 class SemanticRoutines {
     static void call(String routineName, CodeGenerator codeGenerator) {
-        switch (routineName) {
-            case "#pinput":
-                pushInput(codeGenerator);
-                break;
-            case "#declare_var":
-                declareVariable(codeGenerator);
-                break;
-            case "#declare_array":
-                declareArray(codeGenerator);
-                break;
-            case "#pid":
-                pushId(codeGenerator);
-                break;
-            case "#assign":
-                assign(codeGenerator);
-                break;
-            case "#calc_cell":
-                calculateArrayAddress(codeGenerator);
-                break;
-            case "#calcop":
-                calculateOperation(codeGenerator);
-                break;
-            case "#pnum":
-                pushNumber(codeGenerator);
-                break;
-            case "#calc_signed_factor":
-                calculateSignedFactor(codeGenerator);
-                break;
-            case "#save":
-                save(codeGenerator);
-                break;
-            case "#jpf_save":
-                jumpFalseSave(codeGenerator);
-                break;
-            case "#jp":
-                jump(codeGenerator);
-                break;
-            case "#end_while":
-                endWhile(codeGenerator);
-                break;
-            case "#continue":
-                continueWhile(codeGenerator);
-                break;
-            case "#break":
-                breakWhileSwitch(codeGenerator);
-                break;
-            case "#check_case":
-                checkCase(codeGenerator);
-                break;
-            case "#jpf_case":
-                jumpFalseCase(codeGenerator);
-                break;
-            case "#end_switch":
-                endSwitch(codeGenerator);
-                break;
-            case "#ptemp":
-                pushTemp(codeGenerator);
-                break;
-            case "#case_undone_true":
-                caseUndoneTrue(codeGenerator);
-                break;
-            case "#case_undone_false":
-                caseUndoneFalse(codeGenerator);
-                break;
-            case "#pfunkeyword":
-                pushFunctionKeyword(codeGenerator);
-                break;
-            case "#declare_fun":
-                declareFunction(codeGenerator);
-                break;
-            case "#function_call":
-                functionCall(codeGenerator);
-                break;
-            case "#return_expression":
-                returnExpression(codeGenerator);
-                break;
-            case "#return_void":
-                returnVoid(codeGenerator);
-                break;
-            case "#end_function":
-                endFunction(codeGenerator);
-                break;
-            case "#init":
-                init(codeGenerator);
-                break;
-            case "#finalize":
-                finalize(codeGenerator);
-                break;
-            case "#pop":
-                codeGenerator.semanticStack.pop();
-                break;
-            default:
-                System.err.printf("No semantic routine found for '%s'\n", routineName);
+        try {
+            switch (routineName) {
+                case "#pinput":
+                    pushInput(codeGenerator);
+                    break;
+                case "#declare_var":
+                    declareVariable(codeGenerator);
+                    break;
+                case "#declare_array":
+                    declareArray(codeGenerator);
+                    break;
+                case "#pid":
+                    pushId(codeGenerator);
+                    break;
+                case "#assign":
+                    assign(codeGenerator);
+                    break;
+                case "#calc_cell":
+                    calculateArrayAddress(codeGenerator);
+                    break;
+                case "#calcop":
+                    calculateOperation(codeGenerator);
+                    break;
+                case "#pnum":
+                    pushNumber(codeGenerator);
+                    break;
+                case "#calc_signed_factor":
+                    calculateSignedFactor(codeGenerator);
+                    break;
+                case "#save":
+                    save(codeGenerator);
+                    break;
+                case "#jpf_save":
+                    jumpFalseSave(codeGenerator);
+                    break;
+                case "#jp":
+                    jump(codeGenerator);
+                    break;
+                case "#end_while":
+                    endWhile(codeGenerator);
+                    break;
+                case "#continue":
+                    continueWhile(codeGenerator);
+                    break;
+                case "#break":
+                    breakWhileSwitch(codeGenerator);
+                    break;
+                case "#check_case":
+                    checkCase(codeGenerator);
+                    break;
+                case "#jpf_case":
+                    jumpFalseCase(codeGenerator);
+                    break;
+                case "#end_switch":
+                    endSwitch(codeGenerator);
+                    break;
+                case "#ptemp":
+                    pushTemp(codeGenerator);
+                    break;
+                case "#case_undone_true":
+                    caseUndoneTrue(codeGenerator);
+                    break;
+                case "#case_undone_false":
+                    caseUndoneFalse(codeGenerator);
+                    break;
+                case "#pfunkeyword":
+                    pushFunctionKeyword(codeGenerator);
+                    break;
+                case "#declare_fun":
+                    declareFunction(codeGenerator);
+                    break;
+                case "#function_call":
+                    functionCall(codeGenerator);
+                    break;
+                case "#return_expression":
+                    returnExpression(codeGenerator);
+                    break;
+                case "#return_void":
+                    returnVoid(codeGenerator);
+                    break;
+                case "#end_function":
+                    endFunction(codeGenerator);
+                    break;
+                case "#init":
+                    init(codeGenerator);
+                    break;
+                case "#finalize":
+                    finalize(codeGenerator);
+                    break;
+                case "#pop":
+                    codeGenerator.semanticStack.pop();
+                    break;
+                default:
+                    System.err.printf("No semantic routine found for '%s'\n", routineName);
+            }
+        } catch (Exception e) {
+            if (codeGenerator.getErrors().size() == 0)
+                throw e;
         }
 //        System.out.println(codeGenerator.semanticStack.size() + routineName);
     }
 
     private static void finalize(CodeGenerator codeGenerator) {
         for (SymbolTableEntry entry : codeGenerator.symbolTable) {
-            if (entry.lexeme.equals("main") && entry.type.equals(SymbolTableEntry.TypeSpecifier.VOID)) {
-                codeGenerator.programBlock.set(0, String.format("(JP, %d, , )", entry.attribute.jumpAddress));
-                codeGenerator.programBlock.set(1, String.format("(JP, %d, , )", codeGenerator.programBlock.size()));
+            if (entry.lexeme.equals("main") && entry.type.equals(SymbolTableEntry.TypeSpecifier.VOID) &&
+                    entry.attribute != null && entry.attribute.argumentNumber == 0) {
+                codeGenerator.programBlock.set(0, String.format("(ASSIGN, #%d, %d, )",
+                        codeGenerator.programBlock.size(), entry.attribute.getReturnAddress()));
+                codeGenerator.programBlock.set(1, String.format("(JP, %d, , )", entry.attribute.jumpAddress));
                 return;
             }
         }
@@ -126,27 +133,19 @@ class SemanticRoutines {
         codeGenerator.programBlock.add(String.format("(PRINT, %s, , )", codeGenerator.dataBlockAddress));
         codeGenerator.programBlock.add(String.format("(JP, @%s, , )",
                 codeGenerator.symbolTable.get(0).attribute.getReturnAddress()));
-        codeGenerator.semanticStack.push("#function");
-        codeGenerator.semanticStack.push("0");
         codeGenerator.dataBlockAddress += 12;
     }
 
     private static void endFunction(CodeGenerator codeGenerator) {
         SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(codeGenerator.semanticStack.pop()));
         codeGenerator.semanticStack.pop(); // #declare_function (#function)
-        if (!(entry.lexeme.equals("main") && entry.type.equals(SymbolTableEntry.TypeSpecifier.VOID)))
-            codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
-        else
-            codeGenerator.programBlock.add(String.format("(JP, %d, , )", 1));
+        codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
     }
 
     private static void returnVoid(CodeGenerator codeGenerator) {
         SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(
                 codeGenerator.semanticStack.elementAt(getStackPointer(codeGenerator, "#function") + 1)));
-        if (!(entry.lexeme.equals("main") && entry.type.equals(SymbolTableEntry.TypeSpecifier.VOID)))
-            codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
-        else
-            codeGenerator.programBlock.add(String.format("(JP, %d, , )", 1));
+        codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
     }
 
     private static void returnExpression(CodeGenerator codeGenerator) {
@@ -174,7 +173,7 @@ class SemanticRoutines {
                     entry.attribute.dataBlockAddress + i * 4));
         }
 
-        codeGenerator.programBlock.add(String.format("(ASSIGN, #%s, %s, )", codeGenerator.programBlock.size() + 2,
+        codeGenerator.programBlock.add(String.format("(ASSIGN, #%d, %d, )", codeGenerator.programBlock.size() + 2,
                 entry.attribute.getReturnAddress()));
         codeGenerator.programBlock.add(String.format("(JP, %s, , )", entry.attribute.jumpAddress));
         if (entry.type == SymbolTableEntry.TypeSpecifier.VOID)
@@ -362,8 +361,9 @@ class SemanticRoutines {
         command.put("<", "LT");
         command.put("==", "EQ");
 
-        // TODO: Handle void operand
-        if (operand1.equals("#void") || operand2.equals("#void"))
+        if (operand1.equals("#void") || operand2.equals("#void") ||
+                codeGenerator.getSymbolByAddress(Integer.valueOf(operand1)).type == SymbolTableEntry.TypeSpecifier.VOID ||
+                codeGenerator.getSymbolByAddress(Integer.valueOf(operand2)).type == SymbolTableEntry.TypeSpecifier.VOID)
             codeGenerator.errors.add(String.format("%d: Type mismatch in operands.",
                     codeGenerator.lexer.getLineNumber()));
 

@@ -223,7 +223,16 @@ public class CodeGenerator {
         }
     }
 
-    public void getCode() throws IOException {
+    public List<String> getCode() throws IOException {
         traverse(diagrams.get("PROGRAM"));
+        return programBlock;
+    }
+
+    SymbolTableEntry getSymbolByAddress(int address) {
+        for (SymbolTableEntry entry : symbolTable)
+            if (entry.address == address && entry.attribute == null)
+                return entry;
+        // For temporary variables not in symbol table
+        return new SymbolTableEntry(address, "TEMP" + address, SymbolTableEntry.TypeSpecifier.INT);
     }
 }
