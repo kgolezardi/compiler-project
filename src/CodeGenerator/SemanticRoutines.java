@@ -96,6 +96,15 @@ class SemanticRoutines {
                 case "#finalize":
                     finalize(codeGenerator);
                     break;
+                case "#save_scope":
+                    saveScope(codeGenerator);
+                    break;
+                case "#pop_scope":
+                    popScope(codeGenerator);
+                    break;
+                case "#save_symbol":
+                    saveSymbol(codeGenerator);
+                    break;
                 case "#pop":
                     codeGenerator.semanticStack.pop();
                     break;
@@ -107,6 +116,21 @@ class SemanticRoutines {
                 throw e;
         }
 //        System.out.println(codeGenerator.semanticStack.size() + routineName);
+    }
+
+    private static void saveSymbol(CodeGenerator codeGenerator) {
+        codeGenerator.semanticStack.push(String.valueOf(codeGenerator.symbolTable.size()));
+        codeGenerator.symbolTable.add(null);
+    }
+
+    private static void popScope(CodeGenerator codeGenerator) {
+        int size = codeGenerator.scopeStack.pop();
+        while (codeGenerator.symbolTable.size() > size)
+            codeGenerator.symbolTable.remove(codeGenerator.symbolTable.size() - 1);
+    }
+
+    private static void saveScope(CodeGenerator codeGenerator) {
+        codeGenerator.scopeStack.push(codeGenerator.symbolTable.size());
     }
 
     private static void finalize(CodeGenerator codeGenerator) {
@@ -196,18 +220,20 @@ class SemanticRoutines {
         }
         codeGenerator.semanticStack.pop();
 
+        int index = Integer.valueOf(codeGenerator.semanticStack.pop());
+
         String name = codeGenerator.semanticStack.pop();
         SymbolTableEntry.TypeSpecifier type = SymbolTableEntry.TypeSpecifier.valueOf(
                 (codeGenerator.semanticStack.pop()).toUpperCase());
-        SymbolTableEntry entry = new SymbolTableEntry(codeGenerator.symbolTable.size(), name, type,
+        SymbolTableEntry entry = new SymbolTableEntry(index, name, type,
                 new SymbolTableAttribute(argumentNumber, dbAddress, codeGenerator.programBlock.size()));
-        codeGenerator.symbolTable.add(entry);
+        codeGenerator.symbolTable.set(index, entry);
 
         // Output and return address
         codeGenerator.dataBlockAddress += 8;
 
         codeGenerator.semanticStack.push("#function");
-        codeGenerator.semanticStack.push(String.valueOf(codeGenerator.symbolTable.size() - 1));
+        codeGenerator.semanticStack.push(String.valueOf(index));
     }
 
     private static void pushFunctionKeyword(CodeGenerator codeGenerator) {
@@ -362,7 +388,9 @@ class SemanticRoutines {
         command.put("==", "EQ");
 
         if (operand1.equals("#void") || operand2.equals("#void") ||
-                codeGenerator.getSymbolByAddress(Integer.valueOf(operand1)).type == SymbolTableEntry.TypeSpecifier.VOID ||
+                isInteger(operand1) &&
+                        codeGenerator.getSymbolByAddress(Integer.valueOf(operand1)).type == SymbolTableEntry.TypeSpecifier.VOID ||
+                isInteger(operand2) &&
                 codeGenerator.getSymbolByAddress(Integer.valueOf(operand2)).type == SymbolTableEntry.TypeSpecifier.VOID)
             codeGenerator.errors.add(String.format("%d: Type mismatch in operands.",
                     codeGenerator.lexer.getLineNumber()));
@@ -371,6 +399,15 @@ class SemanticRoutines {
                 codeGenerator.tempBlockAddress));
         codeGenerator.semanticStack.push(String.valueOf(codeGenerator.tempBlockAddress));
         codeGenerator.tempBlockAddress += 4;
+    }
+
+    private static boolean isInteger(String str) {
+        try {
+            Integer.valueOf(str);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
     }
 
     private static void calculateArrayAddress(CodeGenerator codeGenerator) {
@@ -394,9 +431,12 @@ class SemanticRoutines {
             SymbolTableEntry entry = codeGenerator.symbolTable.get(i);
             if (entry.lexeme.equals(codeGenerator.currentToken.text)) {
                 codeGenerator.semanticStack.push(String.valueOf(entry.address));
-                break;
+                return;
             }
         }
+        codeGenerator.errors.add(String.format("%d: '%s' is not defined.", codeGenerator.lexer.getLineNumber(),
+                codeGenerator.currentToken.text));
+        codeGenerator.semanticStack.push("-1");
     }
 
     private static void declareVariable(CodeGenerator codeGenerator) {

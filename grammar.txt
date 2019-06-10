@@ -4,7 +4,7 @@ DECLARATION_LIST -> DECLARATION DECLARATION_LIST |  .
 DECLARATION -> #pinput TYPE_SPECIFIER #pinput id DECLARATION1 .
 DECLARATION1 -> VAR_DECLARATION_CONT | FUN_DECLARATION_CONT .
 VAR_DECLARATION_CONT -> #declare_var ; | [ #pinput num ] #declare_array ; .
-FUN_DECLARATION_CONT -> #pfunkeyword ( PARAMS ) #declare_fun COMPOUND_STMT #end_function .
+FUN_DECLARATION_CONT -> #save_symbol #pfunkeyword #save_scope ( PARAMS ) #declare_fun COMPOUND_STMT #pop_scope #end_function .
 
 TYPE_SPECIFIER -> int | void .
 
@@ -24,11 +24,11 @@ COMPOUND_STMT -> { DECLARATION_LIST STATEMENT_LIST } .
 STATEMENT_LIST -> STATEMENT STATEMENT_LIST |  .
 STATEMENT -> EXPRESSION_STMT | COMPOUND_STMT | SELECTION_STMT | ITERATION_STMT | RETURN_STMT | SWITCH_STMT .
 EXPRESSION_STMT -> EXPRESSION #pop ; | continue #continue ; | break #break ; | ; .
-SELECTION_STMT -> if ( EXPRESSION ) #save STATEMENT else #jpf_save STATEMENT #jp .
-ITERATION_STMT -> #pinput while #ptemp #save ( EXPRESSION ) #save STATEMENT #end_while .
+SELECTION_STMT -> if ( EXPRESSION ) #save #save_scope STATEMENT #pop_scope else #jpf_save #save_scope STATEMENT #pop_scope #jp .
+ITERATION_STMT -> #pinput while #ptemp #save ( EXPRESSION ) #save #save_scope STATEMENT #pop_scope #end_while .
 RETURN_STMT -> return RETURN_STMT1 .
 RETURN_STMT1 -> #return_void ; | EXPRESSION #return_expression ; .
-SWITCH_STMT -> #pinput switch #ptemp #save #case_undone_true ( EXPRESSION ) { CASE_STMTS DEFAULT_STMT } #end_switch .
+SWITCH_STMT -> #pinput switch #ptemp #save #case_undone_true ( EXPRESSION ) #save_scope { CASE_STMTS DEFAULT_STMT } #pop_scope #end_switch .
 CASE_STMTS -> CASE_STMT CASE_STMTS |  .
 CASE_STMT -> case #pnum num #check_case #save : #case_undone_false STATEMENT_LIST #jpf_case .
 DEFAULT_STMT -> default : STATEMENT_LIST |  .

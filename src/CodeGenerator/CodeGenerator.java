@@ -17,6 +17,7 @@ public class CodeGenerator {
     List<String> errors;
     private boolean finished = false;
     Stack<String> semanticStack;
+    Stack<Integer> scopeStack;
     List<SymbolTableEntry> symbolTable;
     int dataBlockAddress;
     int tempBlockAddress;
@@ -83,6 +84,7 @@ public class CodeGenerator {
         currentToken = lexer.getNextToken();
         errors = new ArrayList<>();
         semanticStack = new Stack<>();
+        scopeStack = new Stack<>();
         symbolTable = new ArrayList<>();
         dataBlockAddress = 500;
         tempBlockAddress = 1000;
