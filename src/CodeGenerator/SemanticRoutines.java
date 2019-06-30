@@ -161,9 +161,11 @@ class SemanticRoutines {
     }
 
     private static void endFunction(CodeGenerator codeGenerator) {
+        int jpEndAddress = Integer.valueOf(codeGenerator.semanticStack.pop());
         SymbolTableEntry entry = codeGenerator.symbolTable.get(Integer.valueOf(codeGenerator.semanticStack.pop()));
         codeGenerator.semanticStack.pop(); // #declare_function (#function)
         codeGenerator.programBlock.add(String.format("(JP, @%s, , )", entry.attribute.getReturnAddress()));
+        codeGenerator.programBlock.set(jpEndAddress, String.format("(JP, %d, , )", codeGenerator.programBlock.size()));
     }
 
     private static void returnVoid(CodeGenerator codeGenerator) {
@@ -221,6 +223,7 @@ class SemanticRoutines {
         codeGenerator.semanticStack.pop();
 
         int index = Integer.valueOf(codeGenerator.semanticStack.pop());
+        int jpEndAddress = Integer.valueOf(codeGenerator.semanticStack.pop());
 
         String name = codeGenerator.semanticStack.pop();
         SymbolTableEntry.TypeSpecifier type = SymbolTableEntry.TypeSpecifier.valueOf(
@@ -234,6 +237,7 @@ class SemanticRoutines {
 
         codeGenerator.semanticStack.push("#function");
         codeGenerator.semanticStack.push(String.valueOf(index));
+        codeGenerator.semanticStack.push(String.valueOf(jpEndAddress));
     }
 
     private static void pushFunctionKeyword(CodeGenerator codeGenerator) {

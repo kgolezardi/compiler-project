@@ -4,7 +4,7 @@ DECLARATION_LIST -> DECLARATION DECLARATION_LIST |  .
 DECLARATION -> #pinput TYPE_SPECIFIER #pinput id DECLARATION1 .
 DECLARATION1 -> VAR_DECLARATION_CONT | FUN_DECLARATION_CONT .
 VAR_DECLARATION_CONT -> #declare_var ; | [ #pinput num ] #declare_array ; .
-FUN_DECLARATION_CONT -> #save_symbol #pfunkeyword #save_scope ( PARAMS ) #declare_fun COMPOUND_STMT #pop_scope #end_function .
+FUN_DECLARATION_CONT -> #save #save_symbol #pfunkeyword #save_scope ( PARAMS ) #declare_fun COMPOUND_STMT #pop_scope #end_function .
 
 TYPE_SPECIFIER -> int | void .
 
